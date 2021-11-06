@@ -1,0 +1,4 @@
+venv/
+faultFigs/
+*.xls
+*.h5
