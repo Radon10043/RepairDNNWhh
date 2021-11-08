@@ -2,7 +2,7 @@
 Author: Radon
 Date: 2021-10-28 12:08:04
 LastEditors: Radon
-LastEditTime: 2021-11-06 14:59:50
+LastEditTime: 2021-11-08 18:08:50
 Description: Hi, say something
 '''
 import tensorflow as tf
@@ -80,7 +80,7 @@ def get_diff():
     train_images, test_images = train_images / 255.0, test_images / 255.0
     class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
-    images, labels = train_images, train_labels     # 用训练集的图片和标签进行验证
+    images, labels = train_images, train_labels  # 用训练集的图片和标签进行验证
 
     # 使用模型对测试集进行预测，并统计数据
     model = models.load_model("CNNExample.h5")  # TODO: 加载模型, 可以在这里更换要加载的模型
@@ -104,14 +104,24 @@ def get_diff():
         if predict_result[i] != labels[i][0]:
             cnt += 1
             # 将预测错误的图片保存到同目录下的faultFigs文件夹下, 格式为 实际_预测_计数.jpg
-            if not first_r0p1_img and labels[i][0] == 0 and predict_result[i] == 1:    # 将第一张真实为0预测为1的图片保存到文件夹下
+            if not first_r0p1_img and labels[i][0] == 0 and predict_result[i] == 1:  # 将第一张真实为0预测为1的图片保存到文件夹下
                 cv2.imwrite(os.path.join("faultFigs", "R{:d}_P{:d}_C{:d}.jpg".format(labels[i][0], predict_result[i], cnt)), images[i] * 255.0)
+                idx_01 = i  # 记录第一张R0P1图片的下标
                 first_r0p1_img = True
-            if not first_r1p0_img and labels[i][0] == 1 and predict_result[i] == 0:    # 将第一张真实为1预测为0的图片保存到文件夹下
+            if not first_r1p0_img and labels[i][0] == 1 and predict_result[i] == 0:  # 将第一张真实为1预测为0的图片保存到文件夹下
                 cv2.imwrite(os.path.join("faultFigs", "R{:d}_P{:d}_C{:d}.jpg".format(labels[i][0], predict_result[i], cnt)), images[i] * 255.0)
+                idx_10 = i  # 记录第一张R1P0图片的下标
                 first_r1p0_img = True
         result_arr[labels[i][0]][predict_result[i]] += 1
     print("不准确率:", cnt / len(predict_result), ", 请确认不准确率与准确率的和为1")
+
+    # 将两张图片的第一个像素进行交换
+    pixel1 = images[idx_01][0][0]  # 获取R0P1的第一个像素
+    pixel2 = images[idx_10][0][0]  # 获取R1P0的第一个像素
+    images[idx_01][0][0] = pixel2  # 将R0P1的第一个像素进行替换
+    images[idx_10][0][0] = pixel1  # 将R1P0的第一个像素进行替换
+    cv2.imwrite(os.path.join("faultFigs", "R0P1_switch.jpg"), images[idx_01] * 255.0)
+    cv2.imwrite(os.path.join("faultFigs", "R1P0_switch.jpg"), images[idx_10] * 255.0)
 
     # 将统计数据输出至xls文件
     try:
