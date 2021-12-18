@@ -2,3 +2,5 @@ venv/
 faultFigs/
 *.xls
 *.h5
+*.jpg
+*.png
